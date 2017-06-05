@@ -86,3 +86,70 @@ Then to find all records with the phone 55577722:
 	while(it0 != it1) { qDebug() << (*it0).name; ++it0; }
 }
 ```
+
+What if we are interested in search by phone+address combination?
+Then we just add composition index to our array by such code block:
+``` cpp
+ordered_non_unique<
+	tag<Rec::ByKey>, composite_key<
+		Rec,
+		member<Rec,QString,&Rec::phone>,
+		member<Rec,QString,&Rec::addr>
+	>
+>,
+```
+
+(do not forget to add tag: struct ByKey {}; )
+``` cpp
+{
+	Rec r1  = { "John Doe", "55577722", "Unknown st" };
+	Rec r2  = { "Bob Plus", "55577722", "Hidden st" };
+	Rec r3  = { "Rob Minus", "55577722", "Around st" };
+	store.insert(r1);
+	store.insert(r2);
+	store.insert(r3);
+	{
+		QString find_phone = "55577722";
+		QString find_addr = "Around st";
+		Store::index<Rec::ByKey>::type::iterator it0, it1;
+		tie(it0,it1) = store.get<Rec::ByKey>().equal_range(make_tuple(find_phone, find_addr));
+		while(it0 != it1) { qDebug() << (*it0).name; ++it0; }
+	}
+}
+```
+
+Of course for composite key we can also use both ordered_non_unique and ordered_unique.
+In this way it is very convenient to create additional requirements to content of keys and their combinations - the array itself will not allow addition of "wrong" objects.
+
+If we would like to have same time "vector"-like access then we can easily add random_access definition:
+``` cpp
+typedef boost::multi_index_container<Rec,
+	indexed_by<
+		random_access< tag<Rec::ByRnd> >,		
+		ordered_unique<
+			tag<Rec::ByName>, member<Rec,QString,&Rec::name>
+		>,
+		ordered_non_unique<
+			tag<Rec::ByPhone>, member<Rec,QString,&Rec::phone>
+		>
+	>
+> Store;
+```
+
+As result we have access to records by store[0], store[1]..., and push_back().
+If we would like to use array as hash and have fast access by key as О(1), but slower O(log(n)) on insert/remove then we can use hashed_unique/hashed_non_unique instead ordered_unique/ordered_non_uniue:
+``` cpp
+typedef boost::multi_index_container<Rec,
+	indexed_by<
+		hashed_non_unique<
+			tag<Rec::ByName>, member<Rec,QString,&Rec::name>
+		>,
+		ordered_non_unique<
+			tag<Rec::ByPhone>, member<Rec,QString,&Rec::phone>
+		>
+	>
+> Store;
+std::size_t hash_value(QString x) { return qHash(x); }
+```
+
+Of course can do same hashed_uniqie/hashed_non_unique for composite keys.
