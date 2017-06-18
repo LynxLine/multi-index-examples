@@ -153,3 +153,43 @@ std::size_t hash_value(QString x) { return qHash(x); }
 ```
 
 Of course can do same hashed_uniqie/hashed_non_unique for composite keys.
+
+## Records modifications
+
+Because members of objects should be in sync with array keys you can not change only field of object. Imagine that we need to change a phone of one record. To have our keys in sync the change should be done through functor:
+``` cpp
+struct Rec {
+	QString name, phone, addr;
+	struct ByName {};
+	struct ByPhone {};
+	struct ByAddr {};
+	struct PhoneChange : public std::unary_function<Rec,void> {
+		QString p; PhoneChange(const QString &_p) : p(_p) {}
+		void operator()(Rec & r) { r.phone = p; }
+	};
+}; 
+```
+
+As example let's find some record by name, get the appropriate "name" iterator, then with project() switch to iterator by "phone" and finally modify the record by functor:
+``` cpp
+{
+	Store store;
+	Rec r1  = { "Basilio Pupkinio", "021", "Around st" };
+	Rec r2  = { "Vasya Pupkin",     "022", "Around st" };
+	Rec r3  = { "Vasilisa Pupkina", "022", "Around st" };
+	store.insert(r1);
+	store.insert(r2);
+	store.insert(r3);
+
+	QString find_id = "Basilio Pupkinio";
+	typedef Store::index<Rec::ByName>::type NList;
+	typedef Store::index<Rec::ByPhone>::type PList;
+	NList & ns = store.get<Rec::ByName>();
+	PList & ps = store.get<Rec::ByPhone>();
+	NList::const_iterator nit = ns.find(find_id);
+	if ( nit != ns.end() ) {
+		PList::const_iterator pit = store.project<Rec::ByPhone>(nit);
+		ps.modify(pit, Rec::PhoneChange("022"));
+	}
+}
+```
