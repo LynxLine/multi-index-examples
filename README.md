@@ -174,14 +174,14 @@ As example let's find some record by name, get the appropriate "name" iterator, 
 ``` cpp
 {
 	Store store;
-	Rec r1  = { "Basilio Pupkinio", "021", "Around st" };
-	Rec r2  = { "Vasya Pupkin",     "022", "Around st" };
-	Rec r3  = { "Vasilisa Pupkina", "022", "Around st" };
+	Rec r1  = { "John Doe", "55577721", "Unknown st" };
+	Rec r2  = { "Bob Plus", "55577722", "Hidden st" };
+	Rec r3  = { "Rob Minus", "55577723", "Around st" };
 	store.insert(r1);
 	store.insert(r2);
 	store.insert(r3);
 
-	QString find_id = "Basilio Pupkinio";
+	QString find_id = "Bob Plus";
 	typedef Store::index<Rec::ByName>::type NList;
 	typedef Store::index<Rec::ByPhone>::type PList;
 	NList & ns = store.get<Rec::ByName>();
@@ -189,7 +189,7 @@ As example let's find some record by name, get the appropriate "name" iterator, 
 	NList::const_iterator nit = ns.find(find_id);
 	if ( nit != ns.end() ) {
 		PList::const_iterator pit = store.project<Rec::ByPhone>(nit);
-		ps.modify(pit, Rec::PhoneChange("022"));
+		ps.modify(pit, Rec::PhoneChange("11100022"));
 	}
 }
 ```
