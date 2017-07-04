@@ -3,6 +3,7 @@
 #include <QGuiApplication>
 
 void example1();
+void example2();
 
 int main(int argc, char *argv[])
 {
@@ -11,4 +12,5 @@ int main(int argc, char *argv[])
 
 	qDebug() << "multi-index-examples";
 	example1();
+	example2();
 }
