@@ -193,3 +193,24 @@ As example let's find some record by name, get the appropriate "name" iterator, 
 	}
 }
 ```
+
+Keys are not limited by fields - you can use and member-functions, example:
+``` cpp
+struct Rec {
+	QString n, phone, addr;
+	QString name() const { return n; }
+	struct ByName {};
+	struct ByPhone {};
+};
+
+typedef boost::multi_index_container<Rec,
+	indexed_by<
+		hashed_unique<
+			tag<Rec::ByName>, const_mem_fun<Rec,QString,&Rec::name>
+		>,
+		ordered_non_unique<
+			tag<Rec::ByPhone>, member<Rec,QString,&Rec::phone>
+		>
+	>
+> Store;
+```
